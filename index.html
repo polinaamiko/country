@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 Угадай страну | Географическая игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0b1f3b, #07111f);
+            padding: 16px;
+            animation: bgGlow 18s infinite alternate;
+        }
+
+        @keyframes bgGlow {
+            0% { background: radial-gradient(circle at 10% 20%, #0b1f3b, #07111f); }
+            100% { background: radial-gradient(circle at 90% 80%, #142b4a, #07111f); }
+        }
+
+        .game-container {
+            max-width: 820px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 56px;
+            padding: 32px 28px 38px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffe99c, #b7e4ff, #c3a6ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+            margin-bottom: 12px;
+        }
+
+        /* ---------- КАРТОЧКА С ОПИСАНИЕМ / ФЛАГОМ ---------- */
+        .mystery-card {
+            background: linear-gradient(145deg, rgba(10, 30, 55, 0.9), rgba(5, 18, 35, 0.95));
+            border: 1px solid #2f6890;
+            border-radius: 38px;
+            padding: 22px 24px 18px;
+            margin: 14px 0 10px;
+            box-shadow: inset 0 0 40px rgba(0, 80, 160, 0.2), 0 12px 22px -10px #000;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+
+        .mystery-card.revealed {
+            border-color: #ffd966;
+            box-shadow: inset 0 0 50px rgba(255, 217, 102, 0.15), 0 0 30px #ffd96633;
+        }
+
+        .flag-reveal-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 6.4rem;
+            line-height: 1.1;
+            text-align: center;
+            user-select: none;
+            filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.7));
+            animation: float 4s infinite alternate ease-in-out;
+            min-height: 120px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) scale(1); }
+            100% { transform: translateY(-8px) scale(1.02); }
+        }
+
+        .hidden-flag {
+            font-size: 5.2rem;
+            opacity: 0.85;
+            color: #4a7aa8;
+            text-shadow: 0 0 30px #2f6890;
+            letter-spacing: 12px;
+        }
+
+        /* Подсказки-описания */
+        .clues-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 16px;
+            margin-top: 6px;
+        }
+
+        .clue-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: rgba(0, 30, 60, 0.55);
+            border-radius: 18px;
+            padding: 10px 14px;
+            border: 1px solid #265a85;
+            color: #d7eaff;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            backdrop-filter: blur(4px);
+        }
+
+        .clue-item .icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 4px #ffd96688);
+        }
+
+        .clue-item strong {
+            color: #ffe28c;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .clues-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Статистика */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            color: #c8e2ff;
+            font-weight: 500;
+            background: rgba(0, 20, 45, 0.7);
+            padding: 12px 22px;
+            border-radius: 40px;
+            margin: 16px 0 18px;
+            border: 1px solid #2f5b8a;
+            backdrop-filter: blur(6px);
+            font-size: 1.1rem;
+        }
+
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Поле ввода */
+        .input-area {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .input-area input {
+            flex: 1 1 200px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #2e6d9e;
+            border-radius: 60px;
+            padding: 16px 22px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #f0f9ff;
+            outline: none;
+            transition: all 0.25s;
+            letter-spacing: 0.4px;
+            backdrop-filter: blur(6px);
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        .input-area input::placeholder {
+            color: #8eaec9;
+            font-weight: 400;
+        }
+
+        .input-area input:focus {
+            border-color: #ffd966;
+            background: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 20px #ffd96666, inset 0 4px 10px #000000;
+        }
+
+        .input-area input:disabled {
+            opacity: 0.6;
+            border-color: #3a5f80;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #ffd966, #ffb347);
+            border: none;
+            border-radius: 60px;
+            padding: 16px 32px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #07111f;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 10px 18px -6px #00000099, 0 0 0 2px #ffe599;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex: 0 1 auto;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            background: linear-gradient(145deg, #ffe28c, #ffb84d);
+            box-shadow: 0 12px 24px -6px #000000cc, 0 0 0 3px #ffecb0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(145deg, #2d6a9f, #1e4a75);
+            color: #ffffff;
+            box-shadow: 0 10px 18px -6px #00000099, 0 0 0 2px #6fa8dc;
+        }
+
+        .btn.secondary:hover {
+            background: linear-gradient(145deg, #3d7fb5, #255d8c);
+            box-shadow: 0 12px 24px -6px #000000cc, 0 0 0 3px #9ac7f0;
+        }
+
+        /* Фидбек */
+        .feedback {
+            margin: 18px 0 12px;
+            min-height: 2.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px 18px;
+            border-radius: 60px;
+            transition: all 0.3s;
+            background: rgba(0, 30, 70, 0.5);
+            backdrop-filter: blur(5px);
+            color: #d9edff;
+            border: 1px solid #3274a8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .feedback.correct {
+            background: rgba(34, 197, 94, 0.25);
+            border: 2px solid #4ade80;
+            color: #b9ffcf;
+            box-shadow: 0 0 24px #22c55e55;
+        }
+
+        .feedback.wrong {
+            background: rgba(239, 68, 68, 0.25);
+            border: 2px solid #f87171;
+            color: #ffc1c1;
+            box-shadow: 0 0 24px #ef444455;
+        }
+
+        .answer-reveal {
+            font-size: 1.1rem;
+            color: #ffd966;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: 18px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #0f2b46;
+            border-radius: 10px;
+            margin: 20px 0 6px;
+            overflow: hidden;
+            border: 1px solid #2b5f8a;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffd966, #ffb347, #f8a5c2);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        .country-counter {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #aac9e8;
+            padding-right: 6px;
+        }
+
+        @media (max-width: 550px) {
+            .game-container {
+                padding: 22px 18px 30px;
+                border-radius: 36px;
+            }
+            h1 { font-size: 1.7rem; }
+            .flag-reveal-area { font-size: 4.8rem; min-height: 90px; }
+            .hidden-flag { font-size: 3.8rem; letter-spacing: 6px; }
+            .input-area input { font-size: 1rem; padding: 14px 16px; }
+            .btn { padding: 14px 20px; font-size: 1rem; }
+            .feedback { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>🌍 Угадай страну</h1>
+
+    <!-- Карточка загадки: описание или флаг после ответа -->
+    <div class="mystery-card" id="mysteryCard">
+        <div id="cardContent">
+            <!-- Сюда динамически рендерится либо описание, либо флаг -->
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats">
+        <span>⭐ <span id="scoreDisplay">0</span></span>
+        <span>📊 <span id="totalDisplay">0</span> / <span id="maxCountries">0</span></span>
+    </div>
+
+    <!-- Поле ввода -->
+    <div class="input-area">
+        <input type="text" id="countryInput" placeholder="Название страны..." autocomplete="off" autofocus>
+        <button class="btn" id="guessBtn">✓ Угадать</button>
+    </div>
+
+    <!-- Фидбек -->
+    <div class="feedback" id="feedbackMsg">Изучи подсказки и введи название страны</div>
+
+    <!-- Кнопки -->
+    <div class="action-buttons">
+        <button class="btn secondary" id="revealBtn">👁 Показать ответ</button>
+        <button class="btn secondary" id="nextBtn">⏩ Следующая</button>
+    </div>
+
+    <!-- Прогресс -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="country-counter">
+        <span id="progressText">0 из 0</span>
+    </div>
+</div>
+
+<script>
+    // ---------- БОЛЬШАЯ БАЗА СТРАН (около 80) ----------
+    // Поля: name, flag, region, capital, feature (особенность), culture (культура/традиции), fact (интересный факт)
+    const countries = [
+        { name: 'Франция', flag: '🇫🇷', region: 'Западная Европа', capital: 'Париж',
+          feature: 'Эйфелева башня и Лувр', culture: 'Высокая мода, сыры и вино', fact: 'Самая посещаемая страна мира' },
+        { name: 'Германия', flag: '🇩🇪', region: 'Западная Европа', capital: 'Берлин',
+          feature: 'Бранденбургские ворота, автобаны', culture: 'Октоберфест, пиво, инженерные традиции', fact: 'Более 1500 сортов пива' },
+        { name: 'Италия', flag: '🇮🇹', region: 'Южная Европа', capital: 'Рим',
+          feature: 'Колизей, Венеция, Пизанская башня', culture: 'Паста, пицца, опера, Возрождение', fact: 'Здесь больше всего объектов ЮНЕСКО' },
+        { name: 'Испания', flag: '🇪🇸', region: 'Южная Европа', capital: 'Мадрид',
+          feature: 'Саграда Фамилия, коррида', culture: 'Фламенко, тапас, сиеста', fact: 'Официально 5 языков' },
+        { name: 'Португалия', flag: '🇵🇹', region: 'Южная Европа', capital: 'Лиссабон',
+          feature: 'Башня Белен, портвейн', culture: 'Фаду, мореплаватели, азулежу', fact: 'Старейшее государство Европы' },
+        { name: 'Великобритания', flag: '🇬🇧', region: 'Западная Европа', capital: 'Лондон',
+          feature: 'Биг-Бен, Тауэр, Стоунхендж', culture: 'Чай в 5 часов, пабы, футбол', fact: 'Состоит из 4 частей' },
+        { name: 'Ирландия', flag: '🇮🇪', region: 'Западная Европа', capital: 'Дублин',
+          feature: 'Зелёные холмы, пабы', culture: 'День святого Патрика, кельтская музыка', fact: 'Известна как «Изумрудный остров»' },
+        { name: 'Нидерланды', flag: '🇳🇱', region: 'Западная Европа', capital: 'Амстердам',
+          feature: 'Тюльпаны, каналы, велосипеды', culture: 'Мельницы, сыр, художественные музеи', fact: 'Четверть территории ниже уровня моря' },
+        { name: 'Бельгия', flag: '🇧🇪', region: 'Западная Европа', capital: 'Брюссель',
+          feature: 'Атомиум, Гран-Плас', culture: 'Шоколад, вафли, пиво', fact: 'Штаб-квартира ЕС и НАТО' },
+        { name: 'Швейцария', flag: '🇨🇭', region: 'Западная Европа', capital: 'Берн',
+          feature: 'Альпы, банки, часы', culture: 'Сыр фондю, точность, нейтралитет', fact: '4 официальных языка' },
+        { name: 'Австрия', flag: '🇦🇹', region: 'Западная Европа', capital: 'Вена',
+          feature: 'Венская опера, дворцы', culture: 'Моцарт, вальс, кофе и штрудель', fact: 'Родина Гитлера и Моцарта' },
+        { name: 'Швеция', flag: '🇸🇪', region: 'Северная Европа', capital: 'Стокгольм',
+          feature: 'Фьорды, Северное сияние', culture: 'ИКЕА, ABBA, лагом', fact: 'Первая страна с законом о свободе печати' },
+        { name: 'Норвегия', flag: '🇳🇴', region: 'Северная Европа', capital: 'Осло',
+          feature: 'Фьорды, лыжи, нефть', culture: 'Викинги, тролли, северное сияние', fact: 'Самая длинная береговая линия в Европе' },
+        { name: 'Дания', flag: '🇩🇰', region: 'Северная Европа', capital: 'Копенгаген',
+          feature: 'Русалочка, Лего', culture: 'Хюгге, велосипеды, дизайн', fact: 'Старейший флаг в мире' },
+        { name: 'Финляндия', flag: '🇫🇮', region: 'Северная Европа', capital: 'Хельсинки',
+          feature: 'Тысяча озёр, сауны', culture: 'Санта-Клаус, менталитет си́су', fact: 'Лучшая система образования в мире' },
+        { name: 'Исландия', flag: '🇮🇸', region: 'Северная Европа', capital: 'Рейкьявик',
+          feature: 'Гейзеры, вулканы, ледники', culture: 'Саги, эльфы, геотермальная энергия', fact: 'Нет комаров' },
+        { name: 'Польша', flag: '🇵🇱', region: 'Восточная Европа', capital: 'Варшава',
+          feature: 'Великая стена, соляные шахты', culture: 'Шопен, пасхальные традиции', fact: 'Здесь находится самый большой замок в мире' },
+        { name: 'Чехия', flag: '🇨🇿', region: 'Восточная Европа', capital: 'Прага',
+          feature: 'Пражский град, Карлов мост', culture: 'Пиво, куклы, Кафка', fact: 'Прага — город сотни шпилей' },
+        { name: 'Словакия', flag: '🇸🇰', region: 'Восточная Европа', capital: 'Братислава',
+          feature: 'Замки, пещеры', culture: 'Фольклор, сыры, вино', fact: 'Здесь больше всего замков на душу населения' },
+        { name: 'Венгрия', flag: '🇭🇺', region: 'Восточная Европа', capital: 'Будапешт',
+          feature: 'Дунай, термальные источники', culture: 'Гуляш, паприка, фольклор', fact: 'Родина кубика Рубика' },
+        { name: 'Румыния', flag: '🇷🇴', region: 'Восточная Европа', capital: 'Бухарест',
+          feature: 'Карпаты, замок Дракулы', culture: 'Народные танцы, керамика', fact: 'Здесь находится самая большая в Европе дельта' },
+        { name: 'Болгария', flag: '🇧🇬', region: 'Восточная Европа', capital: 'София',
+          feature: 'Черное море, розы', culture: 'Мартеницы, баница', fact: 'Родина кириллицы' },
+        { name: 'Греция', flag: '🇬🇷', region: 'Южная Европа', capital: 'Афины',
+          feature: 'Акрополь, острова', culture: 'Философия, Олимпиады, мусака', fact: 'Здесь зародилась западная цивилизация' },
+        { name: 'Хорватия', flag: '🇭🇷', region: 'Южная Европа', capital: 'Загреб',
+          feature: 'Адриатическое море, Дубровник', culture: 'Галстук, фольклор', fact: 'Родина галстука' },
+        { name: 'Сербия', flag: '🇷🇸', region: 'Южная Европа', capital: 'Белград',
+          feature: 'Белградская крепость', culture: 'Ракия, музыка', fact: 'Одна из старейших стран Европы' },
+        { name: 'Словения', flag: '🇸🇮', region: 'Южная Европа', capital: 'Любляна',
+          feature: 'Озеро Блед, пещеры', culture: 'Сыр, вино, ремёсла', fact: 'Более половины территории — леса' },
+        { name: 'Россия', flag: '🇷🇺', region: 'Восточная Европа / Азия', capital: 'Москва',
+          feature: 'Красная площадь, Байкал', culture: 'Балет, матрёшки, литература', fact: 'Самая большая страна в мире' },
+        { name: 'Украина', flag: '🇺🇦', region: 'Восточная Европа', capital: 'Киев',
+          feature: 'Черное море, степи', culture: 'Борщ, вышиванки', fact: 'Самая большая страна целиком в Европе' },
+        { name: 'Беларусь', flag: '🇧🇾', region: 'Восточная Европа', capital: 'Минск',
+          feature: 'Беловежская пуща, зубры', culture: 'Картофель, фольклор', fact: 'Здесь находится географический центр Европы' },
+        { name: 'Литва', flag: '🇱🇹', region: 'Прибалтика', capital: 'Вильнюс',
+          feature: 'Куршская коса, янтарь', culture: 'Песни, баскетбол', fact: 'Первая республика, вышедшая из СССР' },
+        { name: 'Латвия', flag: '🇱🇻', region: 'Прибалтика', capital: 'Рига',
+          feature: 'Старая Рига, Юрмала', culture: 'Песенный фестиваль, ржаной хлеб', fact: 'Рига — столица с самым большим числом югендстиля' },
+        { name: 'Эстония', flag: '🇪🇪', region: 'Прибалтика', capital: 'Таллин',
+          feature: 'Средневековый Таллин', culture: 'Электронное государство, хоровое пение', fact: 'Первая страна с электронным голосованием' },
+        { name: 'Турция', flag: '🇹🇷', region: 'Западная Азия', capital: 'Анкара',
+          feature: 'Стамбул, Каппадокия', culture: 'Кофе, базары, кебаб', fact: 'Единственный город на двух континентах — Стамбул' },
+        { name: 'Грузия', flag: '🇬🇪', region: 'Западная Азия', capital: 'Тбилиси',
+          feature: 'Кавказские горы, вино', culture: 'Застолье, хинкали, гостеприимство', fact: 'Родина вина (8000 лет)' },
+        { name: 'Армения', flag: '🇦🇲', region: 'Западная Азия', capital: 'Ереван',
+          feature: 'Гора Арарат, монастыри', culture: 'Хачкары, абрикосы', fact: 'Первая страна, принявшая христианство' },
+        { name: 'Азербайджан', flag: '🇦🇿', region: 'Западная Азия', capital: 'Баку',
+          feature: 'Каспийское море, «Горящая гора»', culture: 'Ковры, мугам', fact: 'Страна огней' },
+        { name: 'Казахстан', flag: '🇰🇿', region: 'Центральная Азия', capital: 'Астана',
+          feature: 'Степи, космодром Байконур', culture: 'Кочевники, кумыс, домбра', fact: 'Самая большая страна без выхода к морю' },
+        { name: 'Узбекистан', flag: '🇺🇿', region: 'Центральная Азия', capital: 'Ташкент',
+          feature: 'Самарканд, Бухара', culture: 'Плов, ремёсла, мавзолеи', fact: 'Один из древнейших городов мира' },
+        { name: 'Киргизия', flag: '🇰🇬', region: 'Центральная Азия', capital: 'Бишкек',
+          feature: 'Тянь-Шань, Иссык-Куль', culture: 'Юрты, конные игры', fact: 'Более 90% территории — горы' },
+        { name: 'Таджикистан', flag: '🇹🇯', region: 'Центральная Азия', capital: 'Душанбе',
+          feature: 'Памир, озёра', culture: 'Поэзия, ковры', fact: 'Самая высокая точка СНГ' },
+        { name: 'Туркменистан', flag: '🇹🇲', region: 'Центральная Азия', capital: 'Ашхабад',
+          feature: 'Пустыня Каракумы, ковры', culture: 'Ахалтекинцы, ковры', fact: 'Здесь находится «Врата ада» — газовый кратер' },
+        { name: 'Китай', flag: '🇨🇳', region: 'Восточная Азия', capital: 'Пекин',
+          feature: 'Великая стена, панды', culture: 'Чай, кунг-фу, иероглифы', fact: 'Самое большое население в мире' },
+        { name: 'Япония', flag: '🇯🇵', region: 'Восточная Азия', capital: 'Токио',
+          feature: 'Фудзи, сакура, синкансэн', culture: 'Суши, аниме, чайная церемония', fact: 'Страна восходящего солнца' },
+        { name: 'Южная Корея', flag: '🇰🇷', region: 'Восточная Азия', capital: 'Сеул',
+          feature: 'Современные технологии, K-pop', culture: 'Кимчи, тхэквондо, дорамы', fact: 'Самая быстрая интернет-связь в мире' },
+        { name: 'КНДР', flag: '🇰🇵', region: 'Восточная Азия', capital: 'Пхеньян',
+          feature: 'Закрытая страна, горы', culture: 'Военные парады, идеология', fact: 'Самая закрытая страна мира' },
+        { name: 'Монголия', flag: '🇲🇳', region: 'Восточная Азия', capital: 'Улан-Батор',
+          feature: 'Степи, пустыня Гоби', culture: 'Кочевники, юрты, кумыс', fact: 'Самая малонаселённая страна мира' },
+        { name: 'Вьетнам', flag: '🇻🇳', region: 'Юго-Восточная Азия', capital: 'Ханой',
+          feature: 'Бухта Халонг, рисовые поля', culture: 'Фо, ао-зай, традиции', fact: 'Второй экспортёр риса в мире' },
+        { name: 'Таиланд', flag: '🇹🇭', region: 'Юго-Восточная Азия', capital: 'Бангкок',
+          feature: 'Храмы, острова, слоны', culture: 'Тайский массаж, бокс, карри', fact: 'Страна улыбок' },
+        { name: 'Малайзия', flag: '🇲🇾', region: 'Юго-Восточная Азия', capital: 'Куала-Лумпур',
+          feature: 'Башни Петронас, джунгли', culture: 'Многонациональность, уличная еда', fact: 'Состоит из двух частей' },
+        { name: 'Индонезия', flag: '🇮🇩', region: 'Юго-Восточная Азия', capital: 'Джакарта',
+          feature: 'Бали, вулканы, Комодо', culture: 'Батик, гамелан, кухня', fact: 'Крупнейшее островное государство' },
+        { name: 'Филиппины', flag: '🇵🇭', region: 'Юго-Восточная Азия', capital: 'Манила',
+          feature: 'Белые пляжи, шоколадные холмы', culture: 'Караоке, фиеста', fact: 'Более 7600 островов' },
+        { name: 'Индия', flag: '🇮🇳', region: 'Южная Азия', capital: 'Нью-Дели',
+          feature: 'Тадж-Махал, Гималаи', culture: 'Болливуд, йога, специи', fact: 'Самая многонациональная страна' },
+        { name: 'Пакистан', flag: '🇵🇰', region: 'Южная Азия', capital: 'Исламабад',
+          feature: 'Горы Каракорум', culture: 'Крикет, каваль', fact: 'Обладает ядерным оружием' },
+        { name: 'Бангладеш', flag: '🇧🇩', region: 'Южная Азия', capital: 'Дакка',
+          feature: 'Дельта Ганга, мангры', culture: 'Музыка, текстиль', fact: 'Одна из самых густонаселённых стран' },
+        { name: 'Шри-Ланка', flag: '🇱🇰', region: 'Южная Азия', capital: 'Коломбо',
+          feature: 'Чайные плантации, слонов', culture: 'Буддизм, специи', fact: 'Жемчужина Индийского океана' },
+        { name: 'Непал', flag: '🇳🇵', region: 'Южная Азия', capital: 'Катманду',
+          feature: 'Эверест, храмы', culture: 'Буддизм, альпинизм', fact: 'Единственная страна с непрямоугольным флагом' },
+        { name: 'Египет', flag: '🇪🇬', region: 'Северная Африка', capital: 'Каир',
+          feature: 'Пирамиды, Нил, Сфинкс', culture: 'Фараоны, иероглифы, копты', fact: 'Одна из древнейших цивилизаций' },
+        { name: 'Марокко', flag: '🇲🇦', region: 'Северная Африка', capital: 'Рабат',
+          feature: 'Марракеш, Сахара', culture: 'Ковры, тажин, музыка', fact: 'Единственная африканская страна с выходом в Атлантику и Средиземное море' },
+        { name: 'Алжир', flag: '🇩🇿', region: 'Северная Африка', capital: 'Алжир',
+          feature: 'Сахара, римские руины', culture: 'Берберы, кускус', fact: 'Самая большая страна Африки' },
+        { name: 'Тунис', flag: '🇹🇳', region: 'Северная Африка', capital: 'Тунис',
+          feature: 'Карфаген, пляжи', culture: 'Кускус, хаммам', fact: 'Родина «Арабской весны»' },
+        { name: 'Ливия', flag: '🇱🇾', region: 'Северная Африка', capital: 'Триполи',
+          feature: 'Пустыня Сахара, руины', culture: 'Бедуины, верблюды', fact: 'Более 90% территории — пустыня' },
+        { name: 'Судан', flag: '🇸🇩', region: 'Северная Африка', capital: 'Хартум',
+          feature: 'Пирамиды Мероэ, Нил', culture: 'Культуры долины Нила', fact: 'Здесь больше пирамид, чем в Египте' },
+        { name: 'Нигерия', flag: '🇳🇬', region: 'Западная Африка', capital: 'Абуджа',
+          feature: 'Дельта Нигера, Нолливуд', culture: 'Йоруба, игбо, хауса', fact: 'Самая населённая страна Африки' },
+        { name: 'Гана', flag: '🇬🇭', region: 'Западная Африка', capital: 'Аккра',
+          feature: 'Золотой берег, форты', culture: 'Кенте, барабаны', fact: 'Первая африканская страна, получившая независимость' },
+        { name: 'Кения', flag: '🇰🇪', region: 'Восточная Африка', capital: 'Найроби',
+          feature: 'Сафари, Масаи-Мара', culture: 'Масаи, чай, кофе', fact: 'Родина марафонцев' },
+        { name: 'Эфиопия', flag: '🇪🇹', region: 'Восточная Африка', capital: 'Аддис-Абеба',
+          feature: 'Скальные церкви, кофе', culture: 'Кофе, джаз, древние традиции', fact: 'Единственная африканская страна, не колонизированная' },
+        { name: 'ЮАР', flag: '🇿🇦', region: 'Южная Африка', capital: 'Претория',
+          feature: 'Кейптаун, сафари', culture: 'Мандела, регби, мультикультурализм', fact: '3 столицы и 11 официальных языков' },
+        { name: 'США', flag: '🇺🇸', region: 'Северная Америка', capital: 'Вашингтон',
+          feature: 'Статуя Свободы, Гранд-Каньон', culture: 'Голливуд, джаз, фастфуд', fact: 'Состоит из 50 штатов' },
+        { name: 'Канада', flag: '🇨🇦', region: 'Северная Америка', capital: 'Оттава',
+          feature: 'Ниагарский водопад, кленовый сироп', culture: 'Хоккей, мультикультурализм', fact: 'Самая длинная береговая линия в мире' },
+        { name: 'Мексика', flag: '🇲🇽', region: 'Северная Америка', capital: 'Мехико',
+          feature: 'Пирамиды майя, сомбреро', culture: 'Мариачи, тако, текила', fact: 'Родина шоколада и ванили' },
+        { name: 'Бразилия', flag: '🇧🇷', region: 'Южная Америка', capital: 'Бразилиа',
+          feature: 'Амазонка, Карнавал', culture: 'Самба, футбол, капоэйра', fact: 'Самая большая страна Южной Америки' },
+        { name: 'Аргентина', flag: '🇦🇷', region: 'Южная Америка', capital: 'Буэнос-Айрес',
+          feature: 'Патагония, танго', culture: 'Танго, футбол, мате', fact: 'Родина папы Франциска' },
+        { name: 'Чили', flag: '🇨🇱', region: 'Южная Америка', capital: 'Сантьяго',
+          feature: 'Пустыня Атакама, Анды', culture: 'Вино, поэзия Неруды', fact: 'Самая длинная и узкая страна' },
+        { name: 'Перу', flag: '🇵🇪', region: 'Южная Америка', capital: 'Лима',
+          feature: 'Мачу-Пикчу, Наска', culture: 'Инки, картофель, альпаки', fact: 'Родина картофеля' },
+        { name: 'Колумбия', flag: '🇨🇴', region: 'Южная Америка', capital: 'Богота',
+          feature: 'Кофе, Картахена', culture: 'Сальса, кофе, цветы', fact: 'Второй производитель кофе в мире' },
+        { name: 'Венесуэла', flag: '🇻🇪', region: 'Южная Америка', capital: 'Каракас',
+          feature: 'Водопад Анхель, нефть', culture: 'Хоропо, бейсбол', fact: 'Самый высокий водопад в мире' },
+        { name: 'Австралия', flag: '🇦🇺', region: 'Океания', capital: 'Канберра',
+          feature: 'Кенгуру, Сиднейский оперный театр', culture: 'Аборигены, сёрфинг', fact: 'Единственная страна-континент' },
+        { name: 'Новая Зеландия', flag: '🇳🇿', region: 'Океания', capital: 'Веллингтон',
+          feature: 'Маори, фьорды, киви', culture: 'Хака, регби, вино', fact: 'Первая страна, давшая женщинам избирательное право' }
+    ];
+
+    // ---------- СОСТОЯНИЕ ИГРЫ ----------
+    let currentCountry = null;
+    let score = 0;
+    let totalGuessed = 0;
+    let answered = false;
+    let correctAnswer = '';
+
+    const cardContent = document.getElementById('cardContent');
+    const mysteryCard = document.getElementById('mysteryCard');
+    const countryInput = document.getElementById('countryInput');
+    const guessBtn = document.getElementById('guessBtn');
+    const revealBtn = document.getElementById('revealBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const feedbackMsg = document.getElementById('feedbackMsg');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const maxCountriesSpan = document.getElementById('maxCountries');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    // ---------- ВСПОМОГАТЕЛЬНЫЕ ----------
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    let shuffledCountries = shuffleArray([...countries]);
+    let usedIndices = new Set();
+
+    // Обновление статистики
+    function updateStats() {
+        scoreDisplay.textContent = score;
+        totalDisplay.textContent = totalGuessed;
+        maxCountriesSpan.textContent = countries.length;
+        const percent = (totalGuessed / countries.length) * 100;
+        progressFill.style.width = percent + '%';
+        progressText.textContent = `${totalGuessed} из ${countries.length}`;
+    }
+
+    // Рендер карточки: описание (флаг скрыт) или флаг (после ответа)
+    function renderCard(showFlag = false) {
+        if (!currentCountry) return;
+
+        if (showFlag) {
+            // Показываем флаг, когда ответ раскрыт
+            cardContent.innerHTML = `
+                <div class="flag-reveal-area">${currentCountry.flag}</div>
+                <div style="text-align:center; margin-top:6px; font-size:1.1rem; color:#ffe28c; font-weight:600;">
+                    ${currentCountry.name}
+                </div>
+            `;
+            mysteryCard.classList.add('revealed');
+        } else {
+            // Показываем описание, флаг скрыт
+            cardContent.innerHTML = `
+                <div style="text-align:center; margin-bottom:10px;">
+                    <span class="hidden-flag">🌍 ??? 🌍</span>
+                </div>
+                <div class="clues-grid">
+                    <div class="clue-item">
+                        <span class="icon">🗺️</span>
+                        <div><strong>Расположение:</strong> ${currentCountry.region}</div>
+                    </div>
+                    <div class="clue-item">
+                        <span class="icon">🏛️</span>
+                        <div><strong>Столица:</strong> ${currentCountry.capital}</div>
+                    </div>
+                    <div class="clue-item">
+                        <span class="icon">⭐</span>
+                        <div><strong>Особенность:</strong> ${currentCountry.feature}</div>
+                    </div>
+                    <div class="clue-item">
+                        <span class="icon">🎭</span>
+                        <div><strong>Культура:</strong> ${currentCountry.culture}</div>
+                    </div>
+                    <div class="clue-item" style="grid-column: 1 / -1;">
+                        <span class="icon">💡</span>
+                        <div><strong>Интересный факт:</strong> ${currentCountry.fact}</div>
+                    </div>
+                </div>
+            `;
+            mysteryCard.classList.remove('revealed');
+        }
+    }
+
+    // Выбор новой страны
+    function pickNewCountry() {
+        if (usedIndices.size >= countries.length) {
+            usedIndices.clear();
+            shuffledCountries = shuffleArray([...countries]);
+        }
+
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * shuffledCountries.length);
+        } while (usedIndices.has(randomIndex));
+
+        usedIndices.add(randomIndex);
+        currentCountry = shuffledCountries[randomIndex];
+        correctAnswer = currentCountry.name.toLowerCase().trim();
+
+        // Сброс состояния
+        answered = false;
+        feedbackMsg.textContent = 'Изучи подсказки и введи название страны';
+        feedbackMsg.className = 'feedback';
+        countryInput.value = '';
+        countryInput.disabled = false;
+        countryInput.focus();
+
+        // Рендерим карточку с описанием (флаг скрыт)
+        renderCard(false);
+    }
+
+    // Загрузка первой страны
+    function loadFirstCountry() {
+        usedIndices.clear();
+        shuffledCountries = shuffleArray([...countries]);
+        score = 0;
+        totalGuessed = 0;
+        updateStats();
+        pickNewCountry();
+    }
+
+    // Проверка ответа
+    function checkGuess() {
+        if (answered) {
+            feedbackMsg.textContent = 'Вы уже ответили на эту страну. Нажмите «Следующая».';
+            feedbackMsg.className = 'feedback';
+            return;
+        }
+
+        const userAnswer = countryInput.value.trim().toLowerCase();
+        if (!userAnswer) {
+            feedbackMsg.textContent = '✏️ Введите название страны!';
+            feedbackMsg.className = 'feedback';
+            return;
+        }
+
+        answered = true;
+        countryInput.disabled = true;
+
+        const isCorrect = (userAnswer === correctAnswer);
+
+        if (isCorrect) {
+            score++;
+            totalGuessed++;
+            feedbackMsg.innerHTML = `✅ Правильно! Это ${currentCountry.name} ${currentCountry.flag}`;
+            feedbackMsg.className = 'feedback correct';
+        } else {
+            feedbackMsg.innerHTML = `❌ Неверно. Правильный ответ: <span class="answer-reveal">${currentCountry.name} ${currentCountry.flag}</span>`;
+            feedbackMsg.className = 'feedback wrong';
+        }
+
+        // После ответа показываем флаг
+        renderCard(true);
+        updateStats();
+    }
+
+    // Показать ответ
+    function revealAnswer() {
+        if (!currentCountry) return;
+
+        if (!answered) {
+            answered = true;
+            countryInput.disabled = true;
+            feedbackMsg.innerHTML = `🔍 Правильный ответ: <span class="answer-reveal">${currentCountry.name} ${currentCountry.flag}</span> (вы не угадали)`;
+            feedbackMsg.className = 'feedback wrong';
+        } else {
+            feedbackMsg.innerHTML = `🔍 Ответ: <span class="answer-reveal">${currentCountry.name} ${currentCountry.flag}</span>`;
+            feedbackMsg.className = 'feedback';
+        }
+
+        // Показываем флаг
+        renderCard(true);
+    }
+
+    // Следующая страна
+    function nextCountry() {
+        pickNewCountry();
+        updateStats();
+    }
+
+    // ---------- ОБРАБОТЧИКИ ----------
+    guessBtn.addEventListener('click', checkGuess);
+
+    countryInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            checkGuess();
+        }
+    });
+
+    revealBtn.addEventListener('click', revealAnswer);
+    nextBtn.addEventListener('click', nextCountry);
+
+    // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+    loadFirstCountry();
+    updateStats();
+</script>
+</body>
+</html>
